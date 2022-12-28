@@ -74,24 +74,21 @@ class Post_Type {
 
 	public function user_id_column( $column, $post_id ) {
 		$user_id = get_post_meta( $post_id, 'wms_user_id', true );
-		if ( ! $user_id ) {
-			return;
-		}
-		$user = get_user_by( 'ID', $user_id );
+		$user    = get_user_by( 'ID', $user_id );
 		if ( $column === 'user_id' ) {
-			echo $user_id;
+			echo $user_id ?: '---';
 		}
 
 		if ( $column === 'username' ) {
-			echo $user->user_login;
+			echo $user ? $user->user_login : '---';
 		}
 
 		if ( $column === 'user_full_name' ) {
-			echo $user->first_name . ' ' . $user->last_name;
+			echo get_post_meta( $post_id, 'wms_user_first_name', true ) . ' ' . get_post_meta( $post_id, 'wms_user_last_name', true );
 		}
 
 		if ( $column === 'email' ) {
-			echo $user->user_email;
+			echo get_post_meta( $post_id, 'wms_user_email', true );
 		}
 	}
 }
