@@ -5,6 +5,8 @@ class Post_Type {
 
 	public function setup_hooks() {
 		add_action( 'init', [ $this, 'cpt' ] );
+		add_filter( 'manage_wms-entries_posts_columns', [ $this, 'columns' ] );
+		add_action( 'manage_wms-entries_posts_custom_column', [ $this, 'user_id_column' ], 10, 2 );
 	}
 
 	public function cpt() {
@@ -47,14 +49,49 @@ class Post_Type {
 			'exclude_from_search' => true,
 			'publicly_queryable'  => false,
 			'capability_type'     => 'post',
-			'capabilities'        => array(
-				'create_posts' => false,
-				// Removes support for the "Add New" function ( use 'do_not_allow' instead of false for multisite set ups )
-			),
+//			'capabilities'        => array(
+//				'create_posts' => false,
+//				// Removes support for the "Add New" function ( use 'do_not_allow' instead of false for multisite set ups )
+//			),
 			'show_in_rest'        => true,
 		);
 
 		// Registering your Custom Post Type
 		register_post_type( 'wms-entries', $args );
+	}
+
+	public function columns( $columns ) {
+		$date = $columns['date'];
+		unset( $columns['date'] );
+		$columns['user_id']        = __( 'User ID', 'wms' );
+		$columns['username']       = __( 'Username', 'wms' );
+		$columns['user_full_name'] = __( 'Full name', 'wms' );
+		$columns['email']          = __( 'Email', 'wms' );
+		$columns['date']           = $date;
+
+		return $columns;
+	}
+
+	public function user_id_column( $column, $post_id ) {
+		$user_id = get_post_meta( $post_id, 'wms_user_id', true );
+		if ( ! $user_id ) {
+			return;
+		}
+		$user = get_user_by( 'ID', $user_id );
+		if ( $column === 'user_id' ) {
+			echo $user_id;
+		}
+
+		if ( $column === 'username' ) {
+			echo $user->user_login;
+		}
+
+		if ( $column === 'user_full_name' ) {
+			echo $user->first_name . ' ' . $user->last_name;
+		}
+
+		if ( $column === 'email' ) {
+			echo $user->user_email;
+		}
 	}
 }

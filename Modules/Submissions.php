@@ -12,9 +12,10 @@ class Submissions {
 
 	public function add_submission() {
 		return \wp_insert_post( apply_filters( 'wms_add_submission_params', [
-			'post_type'  => 'wms-entries',
-			'post_title' => '#' . $this->user_id,
-			'meta_input' => array(
+			'post_type'   => 'wms-entries',
+			'post_status' => 'publish',
+			'post_title'  => '#' . $this->user_id,
+			'meta_input'  => array(
 				'wms_user_id' => $this->user_id,
 			)
 		], $this->user_id ), true );
