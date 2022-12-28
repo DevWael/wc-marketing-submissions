@@ -76,19 +76,19 @@ class Post_Type {
 		$user_id = get_post_meta( $post_id, 'wms_user_id', true );
 		$user    = get_user_by( 'ID', $user_id );
 		if ( $column === 'user_id' ) {
-			echo $user_id ?: '---';
+			echo esc_html( $user_id ?: '---' );
 		}
 
 		if ( $column === 'username' ) {
-			echo $user ? $user->user_login : '---';
+			echo $user ? esc_html( $user->user_login ) : '---';
 		}
 
 		if ( $column === 'user_full_name' ) {
-			echo get_post_meta( $post_id, 'wms_user_first_name', true ) . ' ' . get_post_meta( $post_id, 'wms_user_last_name', true );
+			echo esc_html( get_post_meta( $post_id, 'wms_user_first_name', true ) ) . ' ' . esc_html( get_post_meta( $post_id, 'wms_user_last_name', true ) );
 		}
 
 		if ( $column === 'email' ) {
-			echo get_post_meta( $post_id, 'wms_user_email', true );
+			echo esc_html( get_post_meta( $post_id, 'wms_user_email', true ) );
 		}
 	}
 }
