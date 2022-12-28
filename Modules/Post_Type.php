@@ -55,6 +55,6 @@ class Post_Type {
 		);
 
 		// Registering your Custom Post Type
-		register_post_type( 'wc-entries', $args );
+		register_post_type( 'wms-entries', $args );
 	}
 }
