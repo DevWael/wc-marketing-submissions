@@ -5,7 +5,8 @@ class Post_Type {
 
 	public function setup_hooks() {
 		add_action( 'init', [ $this, 'cpt' ] );
-		add_filter( 'add_meta_boxes', [ $this, 'metabox' ] );
+		add_action( 'add_meta_boxes', [ $this, 'metabox' ] );
+		add_action( 'save_post', [ $this, 'save_data' ] );
 		add_filter( 'manage_wms-entries_posts_columns', [ $this, 'columns' ] );
 		add_action( 'manage_wms-entries_posts_custom_column', [ $this, 'user_id_column' ], 10, 2 );
 	}
@@ -70,11 +71,12 @@ class Post_Type {
 		$user_id = get_post_meta( $post->ID, 'wms_user_id', true );
 		$user    = get_user_by( 'ID', $user_id );
 		do_action( 'wms_before_metabox_content', $post, $post->ID );
+		wp_nonce_field( 'wms-nonce', '_wms' );
 		?>
         <table class="form-table" role="presentation">
             <tr>
                 <th scope="row"><label for="user_id"><?php _e( 'User ID', 'wms' ); ?></label></th>
-                <td><input readonly name="user_id" type="text" id="user_id"
+                <td><input name="user_id" type="text" id="user_id"
                            value="<?php echo esc_attr( $user_id ?: '---' ); ?>"
                            class="regular-text"></td>
             </tr>
@@ -93,13 +95,38 @@ class Post_Type {
             </tr>
             <tr>
                 <th scope="row"><label for="email_address"><?php _e( 'Email address', 'wms' ); ?></label></th>
-                <td><input readonly name="email_address" type="text" id="email_address"
+                <td><input name="email_address" type="text" id="email_address"
                            value="<?php echo esc_attr( get_post_meta( $post->ID, 'wms_user_email', true ) ); ?>"
                            class="regular-text"></td>
             </tr>
         </table>
 		<?php
 		do_action( 'wms_after_metabox_content', $post, $post->ID );
+	}
+
+	public function save_data( $post_id ) {
+		if ( isset( $_REQUEST['_wms'] ) && wp_verify_nonce( $_REQUEST['_wms'], 'wms-nonce' ) ) {
+			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+				return;
+			}
+			if ( $parent_id = wp_is_post_revision( $post_id ) ) {
+				$post_id = $parent_id;
+			}
+
+			if ( get_post_type( $post_id ) !== 'wms-entries' ) {
+				return;
+			}
+
+			if ( isset( $_POST['user_id'] ) && is_numeric( $_POST['user_id'] ) ) {
+				update_post_meta( $post_id, 'wms_user_id', $_POST['user_id'] );
+			}
+
+			if ( isset( $_POST['email_address'] ) && is_email( $_POST['email_address'] ) ) {
+				update_post_meta( $post_id, 'wms_user_email', $_POST['email_address'] );
+			}
+		} else {
+			die( __( 'Security check', 'textdomain' ) );
+		}
 	}
 
 	public function columns( $columns ) {
