@@ -6,7 +6,7 @@ class Post_Type {
 	public function setup_hooks() {
 		add_action( 'init', [ $this, 'cpt' ] );
 		add_action( 'add_meta_boxes', [ $this, 'metabox' ] );
-		add_action( 'save_post', [ $this, 'save_data' ] );
+		add_action( 'save_post_wms-entries', [ $this, 'save_data' ], 10, 2 );
 		add_filter( 'manage_wms-entries_posts_columns', [ $this, 'columns' ] );
 		add_action( 'manage_wms-entries_posts_custom_column', [ $this, 'user_id_column' ], 10, 2 );
 		add_action( 'admin_init', [ $this, 'settings_fields' ] );
@@ -106,17 +106,13 @@ class Post_Type {
 		do_action( 'wms_after_metabox_content', $post, $post->ID );
 	}
 
-	public function save_data( $post_id ) {
+	public function save_data( $post_id, $post ) {
 		if ( isset( $_REQUEST['_wms'] ) && wp_verify_nonce( $_REQUEST['_wms'], 'wms-nonce' ) ) {
 			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 				return;
 			}
 			if ( $parent_id = wp_is_post_revision( $post_id ) ) {
 				$post_id = $parent_id;
-			}
-
-			if ( get_post_type( $post_id ) !== 'wms-entries' ) {
-				return;
 			}
 
 			if ( isset( $_POST['user_id'] ) && is_numeric( $_POST['user_id'] ) ) {
@@ -126,8 +122,6 @@ class Post_Type {
 			if ( isset( $_POST['email_address'] ) && is_email( $_POST['email_address'] ) ) {
 				update_post_meta( $post_id, 'wms_user_email', $_POST['email_address'] );
 			}
-		} else {
-			die( __( 'Security check', 'wms' ) );
 		}
 	}
 
@@ -184,7 +178,7 @@ class Post_Type {
 	}
 
 	public function settings_fields() {
-        $page_slug    = 'wms-settings';
+		$page_slug    = 'wms-settings';
 		$option_group = 'wms_settings';
 
 		// 1. create section
@@ -203,7 +197,7 @@ class Post_Type {
 		) );
 		register_setting( $option_group, 'wms_label', array(
 			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize__textarea' ],
+			'sanitize_callback' => [ $this, 'sanitize_textarea' ],
 			'default'           => __( 'I would like to sign up to receive email updates from Deedy.', 'wms' ),
 		) );
 
@@ -234,7 +228,7 @@ class Post_Type {
 		$value = get_option( 'wms_enable' );
 		?>
         <label>
-            <input type="checkbox" name="wms_enable" <?php checked( $value, 'yes' ) ?> /> Yes
+            <input type="checkbox" name="wms_enable" <?php checked( $value, 'yes' ) ?> /> <?php _e( 'Yes', 'wms' ); ?>
         </label>
 		<?php
 	}
@@ -244,7 +238,7 @@ class Post_Type {
 			'<textarea rows="4" cols="50" id="%s" name="%s">%s</textarea>',
 			$args['name'],
 			$args['name'],
-			get_option( $args['name'], __( 'I would like to sign up to receive email updates from Deedy.', 'wms' ) ) // 2 is the default number of slides
+			get_option( $args['name'], __( 'I would like to sign up to receive email updates from Deedy.', 'wms' ) )
 		);
 	}
 
@@ -252,10 +246,11 @@ class Post_Type {
 		return 'on' === $value ? 'yes' : 'no';
 	}
 
-	public function sanitize__textarea( $value ) {
+	public function sanitize_textarea( $value ) {
 		return wp_kses( $value, array(
 			'a' => array(
-				'href' => array()
+				'href'   => array(),
+				'target' => array(),
 			)
 		) );
 	}
