@@ -64,7 +64,7 @@ class Post_Type {
 	}
 
 	public function metabox() {
-		add_meta_box( 'wms', __( 'Submission Details', 'wms' ), [ $this, 'metabox_content' ], 'wms-entries' );
+		add_meta_box( 'wms_metabox', __( 'Submission Details', 'wms' ), [ $this, 'metabox_content' ], 'wms-entries' );
 	}
 
 	public function metabox_content( $post ) {
