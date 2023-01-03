@@ -125,7 +125,7 @@ class Post_Type {
 				update_post_meta( $post_id, 'wms_user_email', $_POST['email_address'] );
 			}
 		} else {
-			die( __( 'Security check', 'textdomain' ) );
+			die( __( 'Security check', 'wms' ) );
 		}
 	}
 
