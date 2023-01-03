@@ -9,6 +9,8 @@ class Post_Type {
 		add_action( 'save_post', [ $this, 'save_data' ] );
 		add_filter( 'manage_wms-entries_posts_columns', [ $this, 'columns' ] );
 		add_action( 'manage_wms-entries_posts_custom_column', [ $this, 'user_id_column' ], 10, 2 );
+		add_action( 'admin_init', [ $this, 'settings_fields' ] );
+		add_action( 'admin_menu', [ $this, 'options_page' ] );
 	}
 
 	public function cpt() {
@@ -159,5 +161,102 @@ class Post_Type {
 		if ( $column === 'email' ) {
 			echo esc_html( get_post_meta( $post_id, 'wms_user_email', true ) );
 		}
+	}
+
+	public function options_page() {
+		add_submenu_page( 'edit.php?post_type=wms-entries', 'Settings',
+			'Settings', 'manage_options', 'wms-settings', [ $this, 'options_page_content' ] );
+	}
+
+	public function options_page_content() {
+		?>
+        <div class="wrap">
+            <h1><?php echo get_admin_page_title() ?></h1>
+            <form method="post" action="options.php">
+				<?php
+				settings_fields( 'wms_settings' ); // settings group name
+				do_settings_sections( 'wms-settings' ); // just a page slug
+				submit_button(); // "Save Changes" button
+				?>
+            </form>
+        </div>
+		<?php
+	}
+
+	public function settings_fields() {
+        $page_slug    = 'wms-settings';
+		$option_group = 'wms_settings';
+
+		// 1. create section
+		add_settings_section(
+			'wms_settings_id', // section ID
+			'', // title (optional)
+			'', // callback function to display the section (optional)
+			$page_slug
+		);
+
+		// 2. register fields
+		register_setting( $option_group, 'wms_enable', array(
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_checkbox' ],
+			'default'           => 'yes',
+		) );
+		register_setting( $option_group, 'wms_label', array(
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize__textarea' ],
+			'default'           => __( 'I would like to sign up to receive email updates from Deedy.', 'wms' ),
+		) );
+
+		// 3. add fields
+		add_settings_field(
+			'enable_wms',
+			__( 'Enable Woocommerce email submissions', 'wms' ),
+			[ $this, 'checkbox_field' ], // function to print the field
+			$page_slug,
+			'wms_settings_id' // section ID
+		);
+
+		add_settings_field(
+			'wms_label',
+			__( 'Checkbox label', 'wms' ),
+			[ $this, 'label_field' ],
+			$page_slug,
+			'wms_settings_id',
+			array(
+				'label_for' => 'wms_label',
+				'class'     => 'label', // for <tr> element
+				'name'      => 'wms_label' // pass any custom parameters
+			)
+		);
+	}
+
+	public function checkbox_field( $args ) {
+		$value = get_option( 'wms_enable' );
+		?>
+        <label>
+            <input type="checkbox" name="wms_enable" <?php checked( $value, 'yes' ) ?> /> Yes
+        </label>
+		<?php
+	}
+
+	public function label_field( $args ) {
+		printf(
+			'<textarea rows="4" cols="50" id="%s" name="%s">%s</textarea>',
+			$args['name'],
+			$args['name'],
+			get_option( $args['name'], __( 'I would like to sign up to receive email updates from Deedy.', 'wms' ) ) // 2 is the default number of slides
+		);
+	}
+
+	public function sanitize_checkbox( $value ) {
+		return 'on' === $value ? 'yes' : 'no';
+	}
+
+	public function sanitize__textarea( $value ) {
+		return wp_kses( $value, array(
+			'a' => array(
+				'href' => array()
+			)
+		) );
 	}
 }
