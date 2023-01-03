@@ -50,10 +50,10 @@ class Post_Type {
 			'exclude_from_search' => true,
 			'publicly_queryable'  => false,
 			'capability_type'     => 'post',
-//			'capabilities'        => array(
-//				'create_posts' => false,
-//				// Removes support for the "Add New" function ( use 'do_not_allow' instead of false for multisite set ups )
-//			),
+			'capabilities'        => array(
+				'create_posts' => 'do_not_allow', // Removes support for the "Add New" function, including Super Admin's
+			),
+			'map_meta_cap'        => true,
 			'show_in_rest'        => true,
 		);
 
