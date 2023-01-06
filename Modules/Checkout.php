@@ -19,7 +19,7 @@ class Checkout {
 	}
 
 	public function checkout() {
-		if ( get_option( 'wms_enable' ) === 'yes' ) {
+		if ( get_option( 'wms_enable', 'yes' ) === 'yes' ) {
 			woocommerce_form_field( 'wms-opt-in', array(
 				'type'        => 'checkbox',
 				'class'       => array( 'form-row marketing-opt-in' ),
@@ -32,7 +32,7 @@ class Checkout {
 	}
 
 	public function process() {
-		if ( get_option( 'wms_enable' ) === 'yes' ) {
+		if ( get_option( 'wms_enable', 'yes' ) === 'yes' ) {
 			$user_id = get_current_user_id();
 			if ( $user_id ) {
 				$user       = get_user_by( 'ID', $user_id );
